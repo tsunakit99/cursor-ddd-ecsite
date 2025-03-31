@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/tsunakit99/cursor-ddd-ecsite/internal/application/commands"
+	"github.com/tsunakit99/cursor-ddd-ecsite/internal/domain/user"
 	"github.com/tsunakit99/cursor-ddd-ecsite/internal/infrastructure/persistence"
 	"github.com/tsunakit99/cursor-ddd-ecsite/internal/infrastructure/persistence/postgres"
 	grpcserver "github.com/tsunakit99/cursor-ddd-ecsite/internal/interfaces/grpc"
@@ -24,6 +25,7 @@ import (
 	orderpb "github.com/tsunakit99/cursor-ddd-ecsite/proto/order"
 	paymentpb "github.com/tsunakit99/cursor-ddd-ecsite/proto/payment"
 	shippingpb "github.com/tsunakit99/cursor-ddd-ecsite/proto/shipping"
+	userpb "github.com/tsunakit99/cursor-ddd-ecsite/proto/user"
 )
 
 func main() {
@@ -61,10 +63,20 @@ func main() {
 	// Shipping リポジトリの設定
 	shippingRepo := postgres.NewShippingRepository(db)
 
+	// User リポジトリとサービスの設定
+	userRepo := postgres.NewUserRepository(db)
+	authService := user.NewAuthService(
+		viper.GetString("auth.jwtSecret"),
+		time.Duration(viper.GetInt("auth.accessTokenExpiry"))*time.Minute,
+		time.Duration(viper.GetInt("auth.refreshTokenExpiry"))*time.Hour,
+	)
+
 	// コマンドハンドラの設定
 	createOrderHandler := commands.NewCreateOrderHandler(orderRepo, eventBus)
 	confirmOrderHandler := commands.NewConfirmOrderHandler(orderRepo, eventBus)
 	cancelOrderHandler := commands.NewCancelOrderHandler(orderRepo, eventBus)
+	registerUserHandler := commands.NewRegisterUserHandler(userRepo, eventBus)
+	loginUserHandler := commands.NewLoginUserHandler(userRepo, authService, eventBus)
 
 	// gRPCサーバーの設定
 	address := fmt.Sprintf("%s:%d", viper.GetString("server.host"), viper.GetInt("server.port"))
@@ -86,12 +98,19 @@ func main() {
 	paymentServer := grpcserver.NewPaymentServer(paymentRepo)
 	inventoryServer := grpcserver.NewInventoryServer(inventoryRepo, reservationRepo)
 	shippingServer := grpcserver.NewShippingServer(shippingRepo)
+	userServer := grpcserver.NewUserServer(
+		registerUserHandler,
+		loginUserHandler,
+		userRepo,
+		authService,
+	)
 
 	// サービスの登録
 	orderpb.RegisterOrderServiceServer(server, orderServer)
 	paymentpb.RegisterPaymentServiceServer(server, paymentServer)
 	inventorypb.RegisterInventoryServiceServer(server, inventoryServer)
 	shippingpb.RegisterShippingServiceServer(server, shippingServer)
+	userpb.RegisterUserServiceServer(server, userServer)
 
 	// gRPCリフレクションの有効化（開発環境用）
 	if viper.GetBool("server.enableReflection") {
@@ -144,6 +163,9 @@ func loadConfig() error {
 	viper.SetDefault("database.dbname", "ecsite")
 	viper.SetDefault("database.sslmode", "disable")
 	viper.SetDefault("kafka.brokers", []string{"localhost:9092"})
+	viper.SetDefault("auth.jwtSecret", "your-jwt-secret-key")
+	viper.SetDefault("auth.accessTokenExpiry", 15) // 15分
+	viper.SetDefault("auth.refreshTokenExpiry", 24) // 24時間
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {

@@ -8,16 +8,18 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+
 	"github.com/tsunakit99/cursor-ddd-ecsite/internal/domain/shipping"
 )
 
-// ShippingRepository はPostgreSQLを使用した配送リポジトリの実装
+// ShippingRepository は配送リポジトリのPostgres実装
 type ShippingRepository struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 // NewShippingRepository は新しい配送リポジトリを作成する
-func NewShippingRepository(db *sql.DB) *ShippingRepository {
+func NewShippingRepository(db *sqlx.DB) *ShippingRepository {
 	return &ShippingRepository{
 		db: db,
 	}

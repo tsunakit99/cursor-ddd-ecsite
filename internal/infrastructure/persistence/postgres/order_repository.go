@@ -8,16 +8,18 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+
 	"github.com/tsunakit99/cursor-ddd-ecsite/internal/domain/order"
 )
 
-// OrderRepository はPostgreSQLを使用した注文リポジトリの実装
+// OrderRepository は注文リポジトリのPostgres実装
 type OrderRepository struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 // NewOrderRepository は新しい注文リポジトリを作成する
-func NewOrderRepository(db *sql.DB) *OrderRepository {
+func NewOrderRepository(db *sqlx.DB) *OrderRepository {
 	return &OrderRepository{
 		db: db,
 	}
@@ -25,7 +27,7 @@ func NewOrderRepository(db *sql.DB) *OrderRepository {
 
 // Save は注文を保存する
 func (r *OrderRepository) Save(ctx context.Context, order *order.Order) error {
-	tx, err := r.db.BeginTx(ctx, nil)
+	tx, err := r.db.Beginx()
 	if err != nil {
 		return fmt.Errorf("トランザクションの開始に失敗しました: %w", err)
 	}
@@ -83,7 +85,7 @@ func (r *OrderRepository) Save(ctx context.Context, order *order.Order) error {
 }
 
 // saveOrderItem は注文アイテムを保存する
-func (r *OrderRepository) saveOrderItem(ctx context.Context, tx *sql.Tx, orderID uuid.UUID, item order.OrderItem) error {
+func (r *OrderRepository) saveOrderItem(ctx context.Context, tx *sqlx.Tx, orderID uuid.UUID, item order.OrderItem) error {
 	query := `
 		INSERT INTO order_items (
 			id, order_id, product_id, product_name, quantity, unit_price, total_price
@@ -116,7 +118,7 @@ func (r *OrderRepository) FindByID(ctx context.Context, id uuid.UUID) (*order.Or
 		FROM orders
 		WHERE id = $1
 	`
-	row := r.db.QueryRowContext(ctx, query, id)
+	row := r.db.QueryRowxContext(ctx, query, id)
 
 	o, err := r.scanOrder(row)
 	if err != nil {
@@ -147,7 +149,7 @@ func (r *OrderRepository) FindByCustomerID(ctx context.Context, customerID uuid.
 		WHERE customer_id = $1
 		ORDER BY created_at DESC
 	`
-	rows, err := r.db.QueryContext(ctx, query, customerID)
+	rows, err := r.db.QueryxContext(ctx, query, customerID)
 	if err != nil {
 		return nil, fmt.Errorf("注文の取得に失敗しました: %w", err)
 	}
@@ -256,7 +258,7 @@ func (r *OrderRepository) Update(ctx context.Context, order *order.Order) error 
 }
 
 // scanOrder はSQL行から注文エンティティを作成する
-func (r *OrderRepository) scanOrder(row *sql.Row) (*order.Order, error) {
+func (r *OrderRepository) scanOrder(row *sqlx.Row) (*order.Order, error) {
 	var o order.Order
 	var status string
 	var paymentID, shippingID sql.NullString
@@ -306,7 +308,7 @@ func (r *OrderRepository) findOrderItems(ctx context.Context, orderID uuid.UUID)
 		FROM order_items
 		WHERE order_id = $1
 	`
-	rows, err := r.db.QueryContext(ctx, query, orderID)
+	rows, err := r.db.QueryxContext(ctx, query, orderID)
 	if err != nil {
 		return nil, fmt.Errorf("注文アイテムの取得に失敗しました: %w", err)
 	}

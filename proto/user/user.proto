@@ -1,0 +1,147 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "github.com/tsunakit99/cursor-ddd-ecsite/proto/user";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// ユーザーサービスの定義
+service UserService {
+  // ユーザー登録
+  rpc Register(RegisterRequest) returns (UserResponse) {}
+  
+  // ログイン
+  rpc Login(LoginRequest) returns (LoginResponse) {}
+  
+  // プロフィールの取得
+  rpc GetProfile(GetProfileRequest) returns (UserResponse) {}
+  
+  // プロフィールの更新
+  rpc UpdateProfile(UpdateProfileRequest) returns (UserResponse) {}
+  
+  // パスワードの変更
+  rpc ChangePassword(ChangePasswordRequest) returns (google.protobuf.Empty) {}
+  
+  // 住所の追加
+  rpc AddAddress(AddAddressRequest) returns (AddressResponse) {}
+  
+  // 住所の更新
+  rpc UpdateAddress(UpdateAddressRequest) returns (AddressResponse) {}
+  
+  // 住所の削除
+  rpc DeleteAddress(DeleteAddressRequest) returns (google.protobuf.Empty) {}
+  
+  // 住所一覧の取得
+  rpc GetAddresses(GetAddressesRequest) returns (GetAddressesResponse) {}
+}
+
+// ユーザー登録リクエスト
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string phone_number = 5;
+}
+
+// ログインリクエスト
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+// ログインレスポンス
+message LoginResponse {
+  string user_id = 1;
+  string email = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string auth_token = 5;
+  string refresh_token = 6;
+  uint64 token_expires_at = 7;
+}
+
+// プロフィール取得リクエスト
+message GetProfileRequest {
+  string user_id = 1;
+}
+
+// プロフィール更新リクエスト
+message UpdateProfileRequest {
+  string user_id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string phone_number = 4;
+}
+
+// パスワード変更リクエスト
+message ChangePasswordRequest {
+  string user_id = 1;
+  string current_password = 2;
+  string new_password = 3;
+}
+
+// ユーザーレスポンス
+message UserResponse {
+  string id = 1;
+  string email = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string phone_number = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+// 住所追加リクエスト
+message AddAddressRequest {
+  string user_id = 1;
+  Address address = 2;
+}
+
+// 住所更新リクエスト
+message UpdateAddressRequest {
+  string user_id = 1;
+  string address_id = 2;
+  Address address = 3;
+}
+
+// 住所削除リクエスト
+message DeleteAddressRequest {
+  string user_id = 1;
+  string address_id = 2;
+}
+
+// 住所一覧取得リクエスト
+message GetAddressesRequest {
+  string user_id = 1;
+}
+
+// 住所一覧取得レスポンス
+message GetAddressesResponse {
+  repeated AddressResponse addresses = 1;
+}
+
+// 住所
+message Address {
+  string recipient_name = 1;
+  string street_line1 = 2;
+  string street_line2 = 3;
+  string city = 4;
+  string state = 5;
+  string postal_code = 6;
+  string country = 7;
+  string phone_number = 8;
+  bool is_default = 9;
+  string address_type = 10; // SHIPPING, BILLING など
+}
+
+// 住所レスポンス
+message AddressResponse {
+  string id = 1;
+  string user_id = 2;
+  Address address = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+} 

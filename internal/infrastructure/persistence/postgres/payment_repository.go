@@ -7,16 +7,18 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+
 	"github.com/tsunakit99/cursor-ddd-ecsite/internal/domain/payment"
 )
 
-// PaymentRepository はPostgreSQLを使用した支払いリポジトリの実装
+// PaymentRepository は支払いリポジトリのPostgres実装
 type PaymentRepository struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 // NewPaymentRepository は新しい支払いリポジトリを作成する
-func NewPaymentRepository(db *sql.DB) *PaymentRepository {
+func NewPaymentRepository(db *sqlx.DB) *PaymentRepository {
 	return &PaymentRepository{
 		db: db,
 	}

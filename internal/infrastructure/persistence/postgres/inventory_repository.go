@@ -8,16 +8,18 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+
 	"github.com/tsunakit99/cursor-ddd-ecsite/internal/domain/inventory"
 )
 
-// InventoryRepository はPostgreSQLを使用した在庫リポジトリの実装
+// InventoryRepository は在庫リポジトリのPostgres実装
 type InventoryRepository struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 // NewInventoryRepository は新しい在庫リポジトリを作成する
-func NewInventoryRepository(db *sql.DB) *InventoryRepository {
+func NewInventoryRepository(db *sqlx.DB) *InventoryRepository {
 	return &InventoryRepository{
 		db: db,
 	}
@@ -30,7 +32,7 @@ func (r *InventoryRepository) FindByProductID(ctx context.Context, productID uui
 		FROM inventory_items
 		WHERE product_id = $1
 	`
-	row := r.db.QueryRowContext(ctx, query, productID)
+	row := r.db.QueryRowxContext(ctx, query, productID)
 
 	var item inventory.InventoryItem
 	err := row.Scan(
@@ -71,7 +73,7 @@ func (r *InventoryRepository) FindByProductIDs(ctx context.Context, productIDs [
 		WHERE product_id IN (%s)
 	`, strings.Join(placeholders, ", "))
 
-	rows, err := r.db.QueryContext(ctx, query, args...)
+	rows, err := r.db.QueryxContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("在庫の取得に失敗しました: %w", err)
 	}
@@ -153,13 +155,13 @@ func (r *InventoryRepository) Update(ctx context.Context, item *inventory.Invent
 	return nil
 }
 
-// ReservationRepository はPostgreSQLを使用した在庫予約リポジトリの実装
+// ReservationRepository は在庫予約リポジトリのPostgres実装
 type ReservationRepository struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
-// NewReservationRepository は新しい在庫予約リポジトリを作成する
-func NewReservationRepository(db *sql.DB) *ReservationRepository {
+// NewReservationRepository は新しい予約リポジトリを作成する
+func NewReservationRepository(db *sqlx.DB) *ReservationRepository {
 	return &ReservationRepository{
 		db: db,
 	}
@@ -167,7 +169,7 @@ func NewReservationRepository(db *sql.DB) *ReservationRepository {
 
 // Save は予約を保存する
 func (r *ReservationRepository) Save(ctx context.Context, reservation *inventory.InventoryReservation) error {
-	tx, err := r.db.BeginTx(ctx, nil)
+	tx, err := r.db.Beginx()
 	if err != nil {
 		return fmt.Errorf("トランザクションの開始に失敗しました: %w", err)
 	}
@@ -226,7 +228,7 @@ func (r *ReservationRepository) FindByID(ctx context.Context, id uuid.UUID) (*in
 		FROM inventory_reservations
 		WHERE id = $1
 	`
-	row := r.db.QueryRowContext(ctx, query, id)
+	row := r.db.QueryRowxContext(ctx, query, id)
 
 	var reservation inventory.InventoryReservation
 	var status string
@@ -251,7 +253,7 @@ func (r *ReservationRepository) FindByID(ctx context.Context, id uuid.UUID) (*in
 		FROM inventory_reservation_items
 		WHERE reservation_id = $1
 	`
-	rows, err := r.db.QueryContext(ctx, query, id)
+	rows, err := r.db.QueryxContext(ctx, query, id)
 	if err != nil {
 		return nil, fmt.Errorf("予約アイテムの取得に失敗しました: %w", err)
 	}
@@ -286,7 +288,7 @@ func (r *ReservationRepository) FindByOrderID(ctx context.Context, orderID uuid.
 		FROM inventory_reservations
 		WHERE order_id = $1
 	`
-	row := r.db.QueryRowContext(ctx, query, orderID)
+	row := r.db.QueryRowxContext(ctx, query, orderID)
 
 	var reservation inventory.InventoryReservation
 	var status string
@@ -311,7 +313,7 @@ func (r *ReservationRepository) FindByOrderID(ctx context.Context, orderID uuid.
 		FROM inventory_reservation_items
 		WHERE reservation_id = $1
 	`
-	rows, err := r.db.QueryContext(ctx, query, reservation.ID)
+	rows, err := r.db.QueryxContext(ctx, query, reservation.ID)
 	if err != nil {
 		return nil, fmt.Errorf("予約アイテムの取得に失敗しました: %w", err)
 	}
