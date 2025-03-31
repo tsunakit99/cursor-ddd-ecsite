@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package inventory;
+
+option go_package = "github.com/tsunakit99/cursor-ddd-ecsite/internal/interfaces/grpc/inventory";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// 在庫サービスの定義
+service InventoryService {
+  // 在庫を確保する（注文時に商品の在庫を予約）
+  rpc ReserveInventory(ReserveInventoryRequest) returns (ReserveInventoryResponse) {}
+  
+  // 在庫を解放する（キャンセル時など）
+  rpc ReleaseInventory(ReleaseInventoryRequest) returns (ReleaseInventoryResponse) {}
+  
+  // 在庫を引き当てる（出荷時に実際に在庫を減らす）
+  rpc CommitInventory(CommitInventoryRequest) returns (CommitInventoryResponse) {}
+  
+  // 商品の在庫状況を確認する
+  rpc CheckInventory(CheckInventoryRequest) returns (InventoryItemResponse) {}
+  
+  // 複数商品の在庫状況を確認する
+  rpc CheckInventoryBatch(CheckInventoryBatchRequest) returns (CheckInventoryBatchResponse) {}
+  
+  // 在庫を増やす（入荷時など）
+  rpc AddInventory(AddInventoryRequest) returns (InventoryItemResponse) {}
+}
+
+// 在庫確保リクエスト
+message ReserveInventoryRequest {
+  string order_id = 1;
+  repeated InventoryItem items = 2;
+}
+
+// 在庫確保レスポンス
+message ReserveInventoryResponse {
+  bool success = 1;
+  repeated InventoryReservationResult results = 2;
+}
+
+// 在庫確保結果
+message InventoryReservationResult {
+  string product_id = 1;
+  bool available = 2;
+  int32 requested_quantity = 3;
+  int32 available_quantity = 4;
+  string reservation_id = 5;
+}
+
+// 在庫解放リクエスト
+message ReleaseInventoryRequest {
+  string order_id = 1;
+  repeated string product_ids = 2;
+}
+
+// 在庫解放レスポンス
+message ReleaseInventoryResponse {
+  bool success = 1;
+  repeated string failed_product_ids = 2;
+}
+
+// 在庫引当リクエスト
+message CommitInventoryRequest {
+  string order_id = 1;
+}
+
+// 在庫引当レスポンス
+message CommitInventoryResponse {
+  bool success = 1;
+  repeated string failed_product_ids = 2;
+}
+
+// 在庫確認リクエスト
+message CheckInventoryRequest {
+  string product_id = 1;
+}
+
+// 複数在庫確認リクエスト
+message CheckInventoryBatchRequest {
+  repeated string product_ids = 1;
+}
+
+// 複数在庫確認レスポンス
+message CheckInventoryBatchResponse {
+  repeated InventoryItemResponse items = 1;
+}
+
+// 在庫アイテム（リクエスト用）
+message InventoryItem {
+  string product_id = 1;
+  int32 quantity = 2;
+}
+
+// 在庫アイテムレスポンス
+message InventoryItemResponse {
+  string product_id = 1;
+  string product_name = 2;
+  int32 available_quantity = 3;
+  int32 reserved_quantity = 4;
+  int32 backorder_quantity = 5;
+  bool in_stock = 6;
+  google.protobuf.Timestamp last_updated = 7;
+}
+
+// 在庫追加リクエスト
+message AddInventoryRequest {
+  string product_id = 1;
+  int32 quantity = 2;
+  string location_id = 3;
+} 

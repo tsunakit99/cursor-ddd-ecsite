@@ -1,0 +1,102 @@
+syntax = "proto3";
+
+package order;
+
+option go_package = "github.com/tsunakit99/cursor-ddd-ecsite/internal/interfaces/grpc/order";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// 注文サービスの定義
+service OrderService {
+  // 注文を作成する
+  rpc CreateOrder(CreateOrderRequest) returns (OrderResponse) {}
+  
+  // 注文を確認する
+  rpc ConfirmOrder(ConfirmOrderRequest) returns (OrderResponse) {}
+  
+  // 注文をキャンセルする
+  rpc CancelOrder(CancelOrderRequest) returns (OrderResponse) {}
+  
+  // 注文詳細を取得する
+  rpc GetOrder(GetOrderRequest) returns (OrderResponse) {}
+  
+  // 顧客の注文リストを取得する
+  rpc GetCustomerOrders(GetCustomerOrdersRequest) returns (OrderListResponse) {}
+}
+
+// 注文作成リクエスト
+message CreateOrderRequest {
+  string customer_id = 1;
+  repeated OrderItem items = 2;
+}
+
+// 注文アイテム
+message OrderItem {
+  string product_id = 1;
+  int32 quantity = 2;
+  double unit_price = 3;
+}
+
+// 注文確認リクエスト
+message ConfirmOrderRequest {
+  string order_id = 1;
+}
+
+// 注文キャンセルリクエスト
+message CancelOrderRequest {
+  string order_id = 1;
+  string reason = 2;
+}
+
+// 注文詳細取得リクエスト
+message GetOrderRequest {
+  string order_id = 1;
+}
+
+// 顧客注文リスト取得リクエスト
+message GetCustomerOrdersRequest {
+  string customer_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+// 注文ステータス
+enum OrderStatus {
+  ORDER_STATUS_UNKNOWN = 0;
+  ORDER_STATUS_PENDING = 1;
+  ORDER_STATUS_CONFIRMED = 2;
+  ORDER_STATUS_PAID = 3;
+  ORDER_STATUS_SHIPPED = 4;
+  ORDER_STATUS_DELIVERED = 5;
+  ORDER_STATUS_CANCELED = 6;
+  ORDER_STATUS_BACKORDERED = 7;
+}
+
+// 注文レスポンス
+message OrderResponse {
+  string id = 1;
+  string customer_id = 2;
+  OrderStatus status = 3;
+  repeated OrderItemResponse items = 4;
+  double total_price = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+// 注文アイテムレスポンス
+message OrderItemResponse {
+  string product_id = 1;
+  string product_name = 2;
+  int32 quantity = 3;
+  double unit_price = 4;
+  double total_price = 5;
+}
+
+// 注文リストレスポンス
+message OrderListResponse {
+  repeated OrderResponse orders = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+} 

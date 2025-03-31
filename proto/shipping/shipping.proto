@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+package shipping;
+
+option go_package = "github.com/tsunakit99/cursor-ddd-ecsite/internal/interfaces/grpc/shipping";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// 配送サービスの定義
+service ShippingService {
+  // 配送を作成する
+  rpc CreateShipping(CreateShippingRequest) returns (ShippingResponse) {}
+  
+  // 配送を準備完了にする
+  rpc MarkAsReady(MarkAsReadyRequest) returns (ShippingResponse) {}
+  
+  // 発送済みにする
+  rpc MarkAsShipped(MarkAsShippedRequest) returns (ShippingResponse) {}
+  
+  // 配送完了にする
+  rpc MarkAsDelivered(MarkAsDeliveredRequest) returns (ShippingResponse) {}
+  
+  // 配送失敗にする
+  rpc MarkAsFailed(MarkAsFailedRequest) returns (ShippingResponse) {}
+  
+  // 配送情報を取得する
+  rpc GetShipping(GetShippingRequest) returns (ShippingResponse) {}
+  
+  // 注文IDに紐づく配送情報を取得する
+  rpc GetShippingByOrderId(GetShippingByOrderIdRequest) returns (ShippingResponse) {}
+  
+  // 配送状況を追跡する
+  rpc TrackShipping(TrackShippingRequest) returns (TrackingResponse) {}
+}
+
+// 配送作成リクエスト
+message CreateShippingRequest {
+  string order_id = 1;
+  Address shipping_address = 2;
+  ShippingMethod method = 3;
+}
+
+// 住所
+message Address {
+  string recipient_name = 1;
+  string street_line1 = 2;
+  string street_line2 = 3;
+  string city = 4;
+  string state = 5;
+  string postal_code = 6;
+  string country = 7;
+  string phone_number = 8;
+}
+
+// 配送方法
+enum ShippingMethod {
+  SHIPPING_METHOD_UNKNOWN = 0;
+  SHIPPING_METHOD_STANDARD = 1;
+  SHIPPING_METHOD_EXPRESS = 2;
+  SHIPPING_METHOD_OVERNIGHT = 3;
+}
+
+// 配送準備完了リクエスト
+message MarkAsReadyRequest {
+  string shipping_id = 1;
+}
+
+// 発送済みリクエスト
+message MarkAsShippedRequest {
+  string shipping_id = 1;
+  string tracking_number = 2;
+  string carrier = 3;
+  google.protobuf.Timestamp estimated_delivery_date = 4;
+}
+
+// 配送完了リクエスト
+message MarkAsDeliveredRequest {
+  string shipping_id = 1;
+  google.protobuf.Timestamp delivery_date = 2;
+  string proof_of_delivery = 3;
+}
+
+// 配送失敗リクエスト
+message MarkAsFailedRequest {
+  string shipping_id = 1;
+  string reason = 2;
+}
+
+// 配送情報取得リクエスト
+message GetShippingRequest {
+  string shipping_id = 1;
+}
+
+// 注文IDから配送情報を取得するリクエスト
+message GetShippingByOrderIdRequest {
+  string order_id = 1;
+}
+
+// 配送追跡リクエスト
+message TrackShippingRequest {
+  string shipping_id = 1;
+}
+
+// 配送ステータス
+enum ShippingStatus {
+  SHIPPING_STATUS_UNKNOWN = 0;
+  SHIPPING_STATUS_CREATED = 1;
+  SHIPPING_STATUS_READY = 2;
+  SHIPPING_STATUS_SHIPPED = 3;
+  SHIPPING_STATUS_IN_TRANSIT = 4;
+  SHIPPING_STATUS_OUT_FOR_DELIVERY = 5;
+  SHIPPING_STATUS_DELIVERED = 6;
+  SHIPPING_STATUS_FAILED = 7;
+}
+
+// 配送レスポンス
+message ShippingResponse {
+  string id = 1;
+  string order_id = 2;
+  Address shipping_address = 3;
+  ShippingMethod method = 4;
+  ShippingStatus status = 5;
+  string tracking_number = 6;
+  string carrier = 7;
+  google.protobuf.Timestamp estimated_delivery_date = 8;
+  google.protobuf.Timestamp actual_delivery_date = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+// 追跡イベント
+message TrackingEvent {
+  string description = 1;
+  string location = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+// 追跡レスポンス
+message TrackingResponse {
+  string shipping_id = 1;
+  string tracking_number = 2;
+  string carrier = 3;
+  ShippingStatus status = 4;
+  string status_description = 5;
+  google.protobuf.Timestamp estimated_delivery_date = 6;
+  repeated TrackingEvent events = 7;
+} 

@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package payment;
+
+option go_package = "github.com/tsunakit99/cursor-ddd-ecsite/internal/interfaces/grpc/payment";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// 支払いサービスの定義
+service PaymentService {
+  // 支払いを作成する
+  rpc CreatePayment(CreatePaymentRequest) returns (PaymentResponse) {}
+  
+  // 支払いを承認する（決済処理を行う）
+  rpc ApprovePayment(ApprovePaymentRequest) returns (PaymentResponse) {}
+  
+  // 支払いを拒否する
+  rpc DeclinePayment(DeclinePaymentRequest) returns (PaymentResponse) {}
+  
+  // 支払い情報を取得する
+  rpc GetPayment(GetPaymentRequest) returns (PaymentResponse) {}
+  
+  // 注文IDに紐づく支払い情報を取得する
+  rpc GetPaymentByOrderId(GetPaymentByOrderIdRequest) returns (PaymentResponse) {}
+}
+
+// 支払い作成リクエスト
+message CreatePaymentRequest {
+  string order_id = 1;
+  double amount = 2;
+  string currency = 3;
+  PaymentMethod payment_method = 4;
+}
+
+// 支払い方法
+enum PaymentMethod {
+  PAYMENT_METHOD_UNKNOWN = 0;
+  PAYMENT_METHOD_CREDIT_CARD = 1;
+  PAYMENT_METHOD_PAYPAL = 2;
+  PAYMENT_METHOD_BANK_TRANSFER = 3;
+}
+
+// 支払い承認リクエスト
+message ApprovePaymentRequest {
+  string payment_id = 1;
+  PaymentDetails payment_details = 2;
+}
+
+// 支払い詳細情報（カード情報やPayPal情報など）
+message PaymentDetails {
+  oneof details {
+    CreditCardDetails credit_card = 1;
+    PayPalDetails paypal = 2;
+    BankTransferDetails bank_transfer = 3;
+  }
+}
+
+// クレジットカード詳細
+message CreditCardDetails {
+  string card_number = 1;
+  string expiry_month = 2;
+  string expiry_year = 3;
+  string cvv = 4;
+  string cardholder_name = 5;
+}
+
+// PayPal詳細
+message PayPalDetails {
+  string email = 1;
+  string token = 2;
+}
+
+// 銀行振込詳細
+message BankTransferDetails {
+  string account_number = 1;
+  string bank_code = 2;
+  string branch_code = 3;
+  string account_holder_name = 4;
+}
+
+// 支払い拒否リクエスト
+message DeclinePaymentRequest {
+  string payment_id = 1;
+  string reason = 2;
+}
+
+// 支払い情報取得リクエスト
+message GetPaymentRequest {
+  string payment_id = 1;
+}
+
+// 注文IDから支払い情報を取得するリクエスト
+message GetPaymentByOrderIdRequest {
+  string order_id = 1;
+}
+
+// 支払いステータス
+enum PaymentStatus {
+  PAYMENT_STATUS_UNKNOWN = 0;
+  PAYMENT_STATUS_PENDING = 1;
+  PAYMENT_STATUS_APPROVED = 2;
+  PAYMENT_STATUS_DECLINED = 3;
+  PAYMENT_STATUS_REFUNDED = 4;
+}
+
+// 支払いレスポンス
+message PaymentResponse {
+  string id = 1;
+  string order_id = 2;
+  double amount = 3;
+  string currency = 4;
+  PaymentMethod payment_method = 5;
+  PaymentStatus status = 6;
+  string transaction_id = 7;
+  string error_message = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+} 

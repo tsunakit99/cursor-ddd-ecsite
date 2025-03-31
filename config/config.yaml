@@ -1,0 +1,43 @@
+app:
+  name: cursor-ddd-ecsite
+  version: 0.1.0
+  environment: development
+
+server:
+  host: 0.0.0.0
+  port: 50051
+
+database:
+  command:
+    driver: postgres
+    host: postgres
+    port: 5432
+    user: postgres
+    password: postgres
+    dbname: ecsite
+    sslmode: disable
+    maxIdleConns: 10
+    maxOpenConns: 100
+  
+  query:
+    uri: mongodb://mongodb:27017
+    database: ecsite
+
+kafka:
+  brokers:
+    - kafka:9092
+  topics:
+    orderCreated: order.created
+    orderConfirmed: order.confirmed
+    orderPaid: order.paid
+    orderShipped: order.shipped
+    orderDelivered: order.delivered
+    orderCanceled: order.canceled
+    paymentCreated: payment.created
+    paymentApproved: payment.approved
+    paymentDeclined: payment.declined
+    inventoryReserved: inventory.reserved
+    inventoryReleased: inventory.released
+    shippingCreated: shipping.created
+    shippingShipped: shipping.shipped
+    shippingDelivered: shipping.delivered 

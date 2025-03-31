@@ -1,0 +1,59 @@
+# Goのビルド関連
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/bin/
+/pkg/
+
+# テスト関連
+*.test
+*.out
+/coverage.txt
+
+# 依存関係
+/vendor/
+
+# Goのキャッシュ
+.cache/
+go.work
+
+# 生成されたProtobufコード
+*.pb.go
+
+# IDEとエディタの設定
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS固有のファイル
+.DS_Store
+Thumbs.db
+
+# 環境変数と秘密情報
+.env
+*.env
+secrets/
+
+# ログファイル
+*.log
+
+# データベース関連
+*.db
+*.sqlite
+
+# コンパイル済みオブジェクト
+*.o
+*.a
+
+# Dockerボリューム
+data/
+
+# Makefileのビルド成果物
+.make/
+
+# 一時ファイル
+/tmp/
