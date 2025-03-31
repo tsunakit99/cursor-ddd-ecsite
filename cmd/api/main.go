@@ -19,11 +19,11 @@ import (
 	"github.com/tsunakit99/cursor-ddd-ecsite/internal/infrastructure/persistence"
 	"github.com/tsunakit99/cursor-ddd-ecsite/internal/infrastructure/persistence/postgres"
 	grpcserver "github.com/tsunakit99/cursor-ddd-ecsite/internal/interfaces/grpc"
-	inventorypb "github.com/tsunakit99/cursor-ddd-ecsite/internal/interfaces/grpc/inventory"
-	orderpb "github.com/tsunakit99/cursor-ddd-ecsite/internal/interfaces/grpc/order"
-	paymentpb "github.com/tsunakit99/cursor-ddd-ecsite/internal/interfaces/grpc/payment"
-	shippingpb "github.com/tsunakit99/cursor-ddd-ecsite/internal/interfaces/grpc/shipping"
 	kafkabus "github.com/tsunakit99/cursor-ddd-ecsite/pkg/eventbus/kafka"
+	inventorypb "github.com/tsunakit99/cursor-ddd-ecsite/proto/inventory"
+	orderpb "github.com/tsunakit99/cursor-ddd-ecsite/proto/order"
+	paymentpb "github.com/tsunakit99/cursor-ddd-ecsite/proto/payment"
+	shippingpb "github.com/tsunakit99/cursor-ddd-ecsite/proto/shipping"
 )
 
 func main() {
@@ -33,7 +33,7 @@ func main() {
 	}
 
 	// コンテキストの作成
-	ctx, cancel := context.WithCancel(context.Background())
+	_, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// データベース接続の設定
@@ -63,6 +63,8 @@ func main() {
 
 	// コマンドハンドラの設定
 	createOrderHandler := commands.NewCreateOrderHandler(orderRepo, eventBus)
+	confirmOrderHandler := commands.NewConfirmOrderHandler(orderRepo, eventBus)
+	cancelOrderHandler := commands.NewCancelOrderHandler(orderRepo, eventBus)
 
 	// gRPCサーバーの設定
 	address := fmt.Sprintf("%s:%d", viper.GetString("server.host"), viper.GetInt("server.port"))
@@ -75,7 +77,12 @@ func main() {
 	server := grpc.NewServer()
 
 	// サーバーインスタンスの作成
-	orderServer := grpcserver.NewOrderServer(createOrderHandler, orderRepo)
+	orderServer := grpcserver.NewOrderServer(
+		createOrderHandler,
+		confirmOrderHandler,
+		cancelOrderHandler,
+		orderRepo,
+	)
 	paymentServer := grpcserver.NewPaymentServer(paymentRepo)
 	inventoryServer := grpcserver.NewInventoryServer(inventoryRepo, reservationRepo)
 	shippingServer := grpcserver.NewShippingServer(shippingRepo)

@@ -64,7 +64,7 @@ func (h *CreateOrderHandler) Handle(ctx context.Context, cmd CreateOrderCommand)
 		BaseEvent: order.NewBaseEvent(newOrder.ID),
 		CustomerID: newOrder.CustomerID,
 		Items: newOrder.Items,
-		TotalPrice: newOrder.TotalPrice,
+		TotalPrice: newOrder.TotalAmount,
 	}
 
 	if err := h.eventBus.Publish(ctx, event); err != nil {

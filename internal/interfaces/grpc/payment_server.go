@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/tsunakit99/cursor-ddd-ecsite/internal/domain/payment"
-	pb "github.com/tsunakit99/cursor-ddd-ecsite/internal/interfaces/grpc/payment"
+	pb "github.com/tsunakit99/cursor-ddd-ecsite/proto/payment"
 )
 
 // PaymentServer はPaymentサービスのgRPC実装
@@ -30,15 +30,14 @@ func NewPaymentServer(
 
 // CreatePayment は支払いを作成する
 func (s *PaymentServer) CreatePayment(ctx context.Context, req *pb.CreatePaymentRequest) (*pb.PaymentResponse, error) {
-	// リクエストの検証
 	if req.OrderId == "" {
 		return nil, status.Error(codes.InvalidArgument, "注文IDは必須です")
 	}
+	if req.PaymentMethod == pb.PaymentMethod_PAYMENT_METHOD_UNKNOWN {
+		return nil, status.Error(codes.InvalidArgument, "支払い方法は必須です")
+	}
 	if req.Amount <= 0 {
 		return nil, status.Error(codes.InvalidArgument, "金額は0より大きい必要があります")
-	}
-	if req.Currency == "" {
-		return nil, status.Error(codes.InvalidArgument, "通貨は必須です")
 	}
 
 	// UUIDの変換
@@ -52,19 +51,28 @@ func (s *PaymentServer) CreatePayment(ctx context.Context, req *pb.CreatePayment
 	switch req.PaymentMethod {
 	case pb.PaymentMethod_PAYMENT_METHOD_CREDIT_CARD:
 		paymentMethod = payment.PaymentMethodCreditCard
-	case pb.PaymentMethod_PAYMENT_METHOD_PAYPAL:
-		paymentMethod = payment.PaymentMethodPayPal
 	case pb.PaymentMethod_PAYMENT_METHOD_BANK_TRANSFER:
 		paymentMethod = payment.PaymentMethodBankTransfer
+	case pb.PaymentMethod_PAYMENT_METHOD_PAYPAL:
+		paymentMethod = payment.PaymentMethodPayPal
 	default:
-		return nil, status.Error(codes.InvalidArgument, "無効な支払い方法")
+		return nil, status.Error(codes.InvalidArgument, "不明な支払い方法です")
 	}
 
-	// 支払いの作成
-	newPayment, err := payment.NewPayment(orderID, req.Amount, req.Currency, paymentMethod)
+	// TODO: 別コマンドハンドラで処理するように修正する
+	// 新しい支払いの作成
+	newPayment, err := payment.NewPayment(
+		orderID,
+		req.Amount,
+		req.Currency,
+		paymentMethod,
+	)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "支払いの作成に失敗しました: %v", err)
 	}
+
+	// 支払い処理（実際の決済処理は外部サービスを使用する）
+	// ...支払い処理のロジックがここに入ります...
 
 	// 支払いの保存
 	if err := s.paymentRepository.Save(ctx, newPayment); err != nil {

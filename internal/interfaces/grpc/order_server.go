@@ -10,23 +10,29 @@ import (
 
 	"github.com/tsunakit99/cursor-ddd-ecsite/internal/application/commands"
 	"github.com/tsunakit99/cursor-ddd-ecsite/internal/domain/order"
-	pb "github.com/tsunakit99/cursor-ddd-ecsite/internal/interfaces/grpc/order"
+	pb "github.com/tsunakit99/cursor-ddd-ecsite/proto/order"
 )
 
 // OrderServer はOrderサービスのgRPC実装
 type OrderServer struct {
 	pb.UnimplementedOrderServiceServer
 	createOrderHandler *commands.CreateOrderHandler
+	confirmOrderHandler *commands.ConfirmOrderHandler
+	cancelOrderHandler *commands.CancelOrderHandler
 	orderRepository    order.Repository
 }
 
 // NewOrderServer は新しいOrderサーバーを作成する
 func NewOrderServer(
 	createOrderHandler *commands.CreateOrderHandler,
+	confirmOrderHandler *commands.ConfirmOrderHandler,
+	cancelOrderHandler *commands.CancelOrderHandler,
 	orderRepository order.Repository,
 ) *OrderServer {
 	return &OrderServer{
 		createOrderHandler: createOrderHandler,
+		confirmOrderHandler: confirmOrderHandler,
+		cancelOrderHandler: cancelOrderHandler,
 		orderRepository:    orderRepository,
 	}
 }
@@ -79,14 +85,57 @@ func (s *OrderServer) CreateOrder(ctx context.Context, req *pb.CreateOrderReques
 
 // ConfirmOrder は注文を確認する
 func (s *OrderServer) ConfirmOrder(ctx context.Context, req *pb.ConfirmOrderRequest) (*pb.OrderResponse, error) {
-	// TODO: 注文確認コマンドハンドラを使用して実装
-	return nil, status.Error(codes.Unimplemented, "未実装")
+	if req.OrderId == "" {
+		return nil, status.Error(codes.InvalidArgument, "注文IDは必須です")
+	}
+
+	// UUIDの変換
+	orderID, err := uuid.Parse(req.OrderId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "無効な注文ID形式: %v", err)
+	}
+
+	// コマンドの作成
+	cmd := commands.ConfirmOrderCommand{
+		OrderID: orderID,
+	}
+
+	// コマンドの実行
+	confirmedOrder, err := s.confirmOrderHandler.Handle(ctx, cmd)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "注文の確認に失敗しました: %v", err)
+	}
+
+	// レスポンスの作成
+	return orderToProto(confirmedOrder), nil
 }
 
 // CancelOrder は注文をキャンセルする
 func (s *OrderServer) CancelOrder(ctx context.Context, req *pb.CancelOrderRequest) (*pb.OrderResponse, error) {
-	// TODO: 注文キャンセルコマンドハンドラを使用して実装
-	return nil, status.Error(codes.Unimplemented, "未実装")
+	if req.OrderId == "" {
+		return nil, status.Error(codes.InvalidArgument, "注文IDは必須です")
+	}
+
+	// UUIDの変換
+	orderID, err := uuid.Parse(req.OrderId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "無効な注文ID形式: %v", err)
+	}
+
+	// コマンドの作成
+	cmd := commands.CancelOrderCommand{
+		OrderID: orderID,
+		Reason:  req.Reason,
+	}
+
+	// コマンドの実行
+	canceledOrder, err := s.cancelOrderHandler.Handle(ctx, cmd)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "注文のキャンセルに失敗しました: %v", err)
+	}
+
+	// レスポンスの作成
+	return orderToProto(canceledOrder), nil
 }
 
 // GetOrder は注文詳細を取得する

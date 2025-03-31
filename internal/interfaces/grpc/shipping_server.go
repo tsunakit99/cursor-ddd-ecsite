@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/tsunakit99/cursor-ddd-ecsite/internal/domain/shipping"
-	pb "github.com/tsunakit99/cursor-ddd-ecsite/internal/interfaces/grpc/shipping"
+	pb "github.com/tsunakit99/cursor-ddd-ecsite/proto/shipping"
 )
 
 // ShippingServer はShippingサービスのgRPC実装

@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/tsunakit99/cursor-ddd-ecsite/internal/domain/inventory"
-	pb "github.com/tsunakit99/cursor-ddd-ecsite/internal/interfaces/grpc/inventory"
+	pb "github.com/tsunakit99/cursor-ddd-ecsite/proto/inventory"
 )
 
 // InventoryServer はInventoryサービスのgRPC実装
