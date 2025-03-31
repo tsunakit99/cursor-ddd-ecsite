@@ -1,11 +1,11 @@
 import {
-    Box,
-    Button,
-    Card,
-    CardContent,
-    CardMedia,
-    Grid,
-    Typography
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardMedia,
+  Grid,
+  Typography
 } from '@mui/material';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -22,28 +22,28 @@ const HomePage: React.FC = () => {
       name: 'テスト商品1',
       description: 'これはテスト商品1の説明です。',
       price: 2000,
-      imageUrl: 'https://via.placeholder.com/300x200',
+      imageUrl: 'https://placehold.co/300x200',
     },
     {
       id: '2',
       name: 'テスト商品2',
       description: 'これはテスト商品2の説明です。',
       price: 3500,
-      imageUrl: 'https://via.placeholder.com/300x200',
+      imageUrl: 'https://placehold.co/300x200',
     },
     {
       id: '3',
       name: 'テスト商品3',
       description: 'これはテスト商品3の説明です。',
       price: 5000,
-      imageUrl: 'https://via.placeholder.com/300x200',
+      imageUrl: 'https://placehold.co/300x200',
     },
     {
       id: '4',
       name: 'テスト商品4',
       description: 'これはテスト商品4の説明です。',
       price: 8000,
-      imageUrl: 'https://via.placeholder.com/300x200',
+      imageUrl: 'https://placehold.co/300x200',
     },
   ];
 

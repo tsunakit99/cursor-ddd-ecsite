@@ -26,6 +26,17 @@ services:
       - ./config:/app/config
     restart: on-failure
 
+  api-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./api-proxy:/app
+      - /app/node_modules
+    restart: on-failure
+
   web:
     build:
       context: .
@@ -36,9 +47,9 @@ services:
       - ./web:/app
       - /app/node_modules
     depends_on:
-      - api
+      - api-proxy
     environment:
-      - REACT_APP_API_URL=http://api:50051
+      - REACT_APP_API_URL=http://localhost:3001
     restart: on-failure
 
   postgres:
