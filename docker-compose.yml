@@ -38,7 +38,7 @@ services:
     depends_on:
       - api
     environment:
-      - REACT_APP_API_URL=http://localhost:50051
+      - REACT_APP_API_URL=http://api:50051
     restart: on-failure
 
   postgres:
