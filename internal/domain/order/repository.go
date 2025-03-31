@@ -15,7 +15,7 @@ type Repository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*Order, error)
 	
 	// FindByCustomerID は指定された顧客IDの注文リストを取得する
-	FindByCustomerID(ctx context.Context, customerID uuid.UUID, offset, limit int) ([]*Order, int, error)
+	FindByCustomerID(ctx context.Context, customerID uuid.UUID) ([]*Order, error)
 	
 	// Update は注文を更新する
 	Update(ctx context.Context, order *Order) error

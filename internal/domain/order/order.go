@@ -28,21 +28,27 @@ var (
 
 // Order は注文の集約ルートエンティティ
 type Order struct {
-	ID         uuid.UUID
-	CustomerID uuid.UUID
-	Status     OrderStatus
-	Items      []OrderItem
-	TotalPrice float64
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	ID                uuid.UUID
+	CustomerID        uuid.UUID
+	Status            OrderStatus
+	Items             []OrderItem
+	TotalAmount       float64
+	Currency          string
+	BillingAddressID  uuid.UUID
+	ShippingAddressID uuid.UUID
+	PaymentID         uuid.UUID
+	ShippingID        uuid.UUID
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }
 
 // OrderItem は注文アイテムを表す値オブジェクト
 type OrderItem struct {
-	ProductID  uuid.UUID
-	Quantity   int
-	UnitPrice  float64
-	TotalPrice float64
+	ProductID   uuid.UUID
+	ProductName string
+	Quantity    int
+	UnitPrice   float64
+	TotalPrice  float64
 }
 
 // NewOrder は新しい注文を作成するファクトリメソッド
@@ -51,19 +57,24 @@ func NewOrder(customerID uuid.UUID, items []OrderItem) (*Order, error) {
 		return nil, ErrEmptyOrderItems
 	}
 
-	totalPrice := 0.0
+	totalAmount := 0.0
 	for _, item := range items {
-		totalPrice += item.TotalPrice
+		totalAmount += item.TotalPrice
 	}
 
 	return &Order{
-		ID:         uuid.New(),
-		CustomerID: customerID,
-		Status:     OrderStatusPending,
-		Items:      items,
-		TotalPrice: totalPrice,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		ID:                uuid.New(),
+		CustomerID:        customerID,
+		Status:            OrderStatusPending,
+		Items:             items,
+		TotalAmount:       totalAmount,
+		Currency:          "JPY", // デフォルト通貨
+		BillingAddressID:  uuid.Nil,
+		ShippingAddressID: uuid.Nil,
+		PaymentID:         uuid.Nil,
+		ShippingID:        uuid.Nil,
+		CreatedAt:         time.Now(),
+		UpdatedAt:         time.Now(),
 	}, nil
 }
 
@@ -79,12 +90,13 @@ func (o *Order) Confirm() error {
 }
 
 // MarkAsPaid は注文を支払い済み状態に変更する
-func (o *Order) MarkAsPaid() error {
+func (o *Order) MarkAsPaid(paymentID uuid.UUID) error {
 	if o.Status != OrderStatusConfirmed && o.Status != OrderStatusBackordered {
 		return ErrInvalidOrderState
 	}
 	
 	o.Status = OrderStatusPaid
+	o.PaymentID = paymentID
 	o.UpdatedAt = time.Now()
 	return nil
 }
@@ -101,12 +113,13 @@ func (o *Order) Backorder() error {
 }
 
 // MarkAsShipped は注文を発送済み状態に変更する
-func (o *Order) MarkAsShipped() error {
+func (o *Order) MarkAsShipped(shippingID uuid.UUID) error {
 	if o.Status != OrderStatusPaid {
 		return ErrInvalidOrderState
 	}
 	
 	o.Status = OrderStatusShipped
+	o.ShippingID = shippingID
 	o.UpdatedAt = time.Now()
 	return nil
 }
@@ -131,6 +144,24 @@ func (o *Order) Cancel() error {
 	o.Status = OrderStatusCanceled
 	o.UpdatedAt = time.Now()
 	return nil
+}
+
+// SetBillingAddress は請求先住所を設定する
+func (o *Order) SetBillingAddress(addressID uuid.UUID) {
+	o.BillingAddressID = addressID
+	o.UpdatedAt = time.Now()
+}
+
+// SetShippingAddress は配送先住所を設定する
+func (o *Order) SetShippingAddress(addressID uuid.UUID) {
+	o.ShippingAddressID = addressID
+	o.UpdatedAt = time.Now()
+}
+
+// SetCurrency は通貨を設定する
+func (o *Order) SetCurrency(currency string) {
+	o.Currency = currency
+	o.UpdatedAt = time.Now()
 }
 
 // CanBePaid は注文が支払い可能かどうかを確認する

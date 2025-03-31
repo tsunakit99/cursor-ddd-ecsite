@@ -80,6 +80,11 @@ message OrderResponse {
   OrderStatus status = 3;
   repeated OrderItemResponse items = 4;
   double total_price = 5;
+  string currency = 8;
+  string billing_address_id = 9;
+  string shipping_address_id = 10;
+  string payment_id = 11;
+  string shipping_id = 12;
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp updated_at = 7;
 }

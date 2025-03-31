@@ -115,12 +115,13 @@ func (s *OrderServer) GetCustomerOrders(ctx context.Context, req *pb.GetCustomer
 		return nil, status.Error(codes.InvalidArgument, "顧客IDは必須です")
 	}
 
+	// UUIDの変換
 	customerID, err := uuid.Parse(req.CustomerId)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "無効な顧客ID形式: %v", err)
 	}
 
-	// ページネーションパラメータの準備
+	// ページネーションの設定
 	page := int(req.Page)
 	if page < 1 {
 		page = 1
@@ -131,17 +132,34 @@ func (s *OrderServer) GetCustomerOrders(ctx context.Context, req *pb.GetCustomer
 		pageSize = 10 // デフォルトページサイズ
 	}
 	
-	offset := (page - 1) * pageSize
-
 	// リポジトリから注文リストを取得
-	orders, totalCount, err := s.orderRepository.FindByCustomerID(ctx, customerID, offset, pageSize)
+	allOrders, err := s.orderRepository.FindByCustomerID(ctx, customerID)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "注文リストの取得に失敗しました: %v", err)
 	}
 
+	// ページネーションの計算
+	totalCount := len(allOrders)
+	offset := (page - 1) * pageSize
+	endIndex := offset + pageSize
+	if endIndex > totalCount {
+		endIndex = totalCount
+	}
+	
+	// ページの範囲外チェック
+	if offset >= totalCount && totalCount > 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "要求されたページは範囲外です")
+	}
+	
+	// 現在のページの注文を取得
+	var pagedOrders []*order.Order
+	if offset < totalCount {
+		pagedOrders = allOrders[offset:endIndex]
+	}
+
 	// レスポンスの作成
-	orderResponses := make([]*pb.OrderResponse, len(orders))
-	for i, o := range orders {
+	orderResponses := make([]*pb.OrderResponse, len(pagedOrders))
+	for i, o := range pagedOrders {
 		orderResponses[i] = orderToProto(o)
 	}
 
@@ -158,11 +176,11 @@ func orderToProto(o *order.Order) *pb.OrderResponse {
 	items := make([]*pb.OrderItemResponse, len(o.Items))
 	for i, item := range o.Items {
 		items[i] = &pb.OrderItemResponse{
-			ProductId:  item.ProductID.String(),
-			ProductName: "", // 注: 商品名はこの実装では取得できないため空欄
-			Quantity:   int32(item.Quantity),
-			UnitPrice:  item.UnitPrice,
-			TotalPrice: item.TotalPrice,
+			ProductId:   item.ProductID.String(),
+			ProductName: item.ProductName,
+			Quantity:    int32(item.Quantity),
+			UnitPrice:   item.UnitPrice,
+			TotalPrice:  item.TotalPrice,
 		}
 	}
 
@@ -187,12 +205,17 @@ func orderToProto(o *order.Order) *pb.OrderResponse {
 	}
 
 	return &pb.OrderResponse{
-		Id:         o.ID.String(),
-		CustomerId: o.CustomerID.String(),
-		Status:     status,
-		Items:      items,
-		TotalPrice: o.TotalPrice,
-		CreatedAt:  timestamppb.New(o.CreatedAt),
-		UpdatedAt:  timestamppb.New(o.UpdatedAt),
+		Id:                o.ID.String(),
+		CustomerId:        o.CustomerID.String(),
+		Status:            status,
+		Items:             items,
+		TotalPrice:        o.TotalAmount,
+		Currency:          o.Currency,
+		BillingAddressId:  o.BillingAddressID.String(),
+		ShippingAddressId: o.ShippingAddressID.String(),
+		PaymentId:         o.PaymentID.String(),
+		ShippingId:        o.ShippingID.String(),
+		CreatedAt:         timestamppb.New(o.CreatedAt),
+		UpdatedAt:         timestamppb.New(o.UpdatedAt),
 	}
 } 
