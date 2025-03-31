@@ -1,93 +1,118 @@
-# DDD ECサイト (cursor-ddd-ecsite)
+# DDD ECサイト
 
-ドメイン駆動設計 (DDD) を使用した ECサイトのサンプルプロジェクト。CQRS、イベントソーシング、レイヤードアーキテクチャを実装しています。
+このプロジェクトは、ドメイン駆動設計（DDD）を採用したECサイトのサンプル実装です。バックエンドはGo言語、フロントエンドはReact（TypeScript）で構築されています。
+
+## 機能
+
+- ユーザー認証（登録・ログイン）
+- ユーザープロフィール管理
+- 住所管理
+- 商品一覧・詳細表示
+- カート機能
+- 注文処理
+- 在庫管理
+- 配送管理
+- 決済処理
 
 ## アーキテクチャ
 
-このプロジェクトでは以下のアーキテクチャパターンを採用しています：
+このプロジェクトは以下のアーキテクチャパターンとプラクティスを採用しています：
 
-- **ドメイン駆動設計 (DDD)**: 複雑なビジネスロジックをドメインモデルとして表現
-- **コマンドクエリ責務分離 (CQRS)**: 書き込みと読み取りの責務を分離
-- **イベントソーシング**: 状態変更を一連のイベントとして保存
-- **レイヤードアーキテクチャ**: 関心事の分離によるスケーラブルな設計
-- **gRPC**: サービス間通信のためのプロトコル
-
-## バウンデッドコンテキスト
-
-プロジェクトは以下のバウンデッドコンテキストに分かれています：
-
-1. **Order**: 注文の作成と管理
-2. **Payment**: 支払い処理
-3. **Inventory**: 在庫管理
-4. **Shipping**: 配送管理
+- ドメイン駆動設計（DDD）
+- CQRS（コマンドクエリ責務分離）
+- イベント駆動アーキテクチャ
+- マイクロサービス
 
 ## 技術スタック
 
-- **バックエンド**: Go
-- **API**: gRPC
-- **データベース**: 
-  - コマンド側: PostgreSQL
-  - クエリ側: MongoDB
-- **メッセージング**: Kafka
-- **コンテナ化**: Docker, Docker Compose
+### バックエンド
 
-## 開発環境のセットアップ
+- Go
+- PostgreSQL
+- Kafka
+- gRPC
+- Docker
 
-### 前提条件
+### フロントエンド
+
+- React
+- TypeScript
+- Material UI
+- React Query
+- React Hook Form
+- Zustand
+
+## 環境構築
+
+### 必要条件
 
 - Docker と Docker Compose
-- Go 1.20以上
-- Protocol Buffers コンパイラ
+- Go 1.18以上
+- Node.js 16以上
+- npm または yarn
 
-### 環境構築
+### セットアップ
+
+1. リポジトリをクローン
 
 ```bash
-# リポジトリのクローン
-git clone https://github.com/tsunakit99/cursor-ddd-ecsite.git
+git clone https://github.com/yourusername/cursor-ddd-ecsite.git
 cd cursor-ddd-ecsite
+```
 
-# 依存関係のインストール
-go mod download
+2. Docker Composeでアプリケーションを起動
 
-# Docker環境の起動
+```bash
 docker-compose up -d
+```
 
-# プロトコルバッファのコンパイル
-make proto
+これにより以下のサービスが起動します：
+- API サーバー (http://localhost:50051)
+- フロントエンド Web アプリケーション (http://localhost:3000)
+- PostgreSQL データベース
+- Kafka
+- Zookeeper
 
-# アプリケーションの実行
+### 開発環境
+
+#### バックエンド開発
+
+```bash
+# APIサーバーを開発モードで起動
+go mod tidy
 go run cmd/api/main.go
 ```
 
-## プロジェクト構造
+#### フロントエンド開発
+
+```bash
+cd web
+npm install
+npm start
+```
+
+## ディレクトリ構造
 
 ```
-cursor-ddd-ecsite/
-├── cmd/                      # エントリーポイント
-├── internal/                 # 非公開コード
-│   ├── domain/               # ドメインモデル
-│   │   ├── order/            # 注文コンテキスト
-│   │   ├── payment/          # 決済コンテキスト
-│   │   ├── inventory/        # 在庫コンテキスト
-│   │   └── shipping/         # 配送コンテキスト
-│   ├── application/          # アプリケーションサービス
-│   │   ├── commands/         # コマンドハンドラー
-│   │   ├── queries/          # クエリハンドラー
-│   │   └── events/           # イベントハンドラー
-│   ├── infrastructure/       # インフラ層
-│   │   ├── persistence/      # データベースアダプター
-│   │   ├── messaging/        # メッセージングアダプター
-│   │   └── api/              # API関連
-│   └── interfaces/           # インターフェース層
-│       └── grpc/             # gRPCサービス
-├── pkg/                      # 公開コード
-│   ├── eventbus/             # イベントバス実装
-│   └── common/               # 共通ユーティリティ
-├── proto/                    # Protocol Buffers定義
-├── config/                   # 設定ファイル
-└── migrations/               # データベースマイグレーション
+.
+├── cmd/               # アプリケーションのエントリーポイント
+│   └── api/           # APIサーバー
+├── internal/          # プライベートなアプリケーションコード
+│   ├── app/           # アプリケーションサービス
+│   ├── domain/        # ドメインモデル
+│   ├── infra/         # インフラストラクチャ層
+│   └── ports/         # 外部とのインターフェース
+├── proto/             # Protocol Buffersの定義
+├── web/               # フロントエンドアプリケーション
+└── docker-compose.yml # Docker構成ファイル
 ```
+
+## リソース
+
+- DDD についての詳細情報： [Domain-Driven Design Reference](https://domainlanguage.com/ddd/reference/)
+- CQRS パターン： [Martin Fowler's CQRS](https://martinfowler.com/bliki/CQRS.html)
+- イベント駆動アーキテクチャ： [What is Event-Driven Architecture?](https://aws.amazon.com/event-driven-architecture/)
 
 ## ライセンス
 
-MITライセンス 
+MIT 

@@ -7,6 +7,20 @@
 /bin/
 /pkg/
 
+# React / Node.js
+/web/node_modules/
+/web/build/
+/web/.pnp
+/web/.pnp.js
+/web/coverage/
+/web/.env.local
+/web/.env.development.local
+/web/.env.test.local
+/web/.env.production.local
+/web/npm-debug.log*
+/web/yarn-debug.log*
+/web/yarn-error.log*  
+
 # テスト関連
 *.test
 *.out
