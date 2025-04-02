@@ -112,7 +112,3 @@ npm start
 - DDD についての詳細情報： [Domain-Driven Design Reference](https://domainlanguage.com/ddd/reference/)
 - CQRS パターン： [Martin Fowler's CQRS](https://martinfowler.com/bliki/CQRS.html)
 - イベント駆動アーキテクチャ： [What is Event-Driven Architecture?](https://aws.amazon.com/event-driven-architecture/)
-
-## ライセンス
-
-MIT 
